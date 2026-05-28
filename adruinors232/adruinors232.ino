@@ -60,44 +60,6 @@ unsigned char calculerChecksum(String trame)
 //    }
 //}
 ///////////////////////////////////////////////////////////////////////////////////////////////
-// void envoyerMotDePasse(String MDP) {
-//  if(client.connect(server, 80)) {
-//    client.print("GET http://192.168.2.68/digicode.php?code=+"); 
-//    client.print(MDP);
-//    client.println(" HTTP/1.0");
-//    client.println();
-//    delay(500);
-//    Serial.println("Mot de passe envoye !");
-//     String response = "";
-//        while (client.available()) {         
-//            char c = client.read();
-//            response += c;
-//        }
-//        
-//        client.stop();
-//        
-//        int contentStart = response.indexOf("\r\n\r\n");
-//        if (contentStart != -1) {
-//            response = response.substring(contentStart + 4);
-//        }
-//        
-//        response.trim();
-//        Serial.print("Reponse");
-//        Serial.println(response);
-//          if (clientDigicode.connect(serverDigicode, 4080) && response=="OK"){
-//            clientDigicode.print(1);
-//            clientDigicode.stop();
-//          }
-//          else{
-//              Serial.println("erreur de co ou acces refusé");
-//            }
-//    }
-//    
-//    else {
-//          Serial.print("Erreur de connection");
-//        }
-// }
-////////////////////////////////////////////////////////////////////////////////////////////
 void setup()
 {
   
@@ -106,9 +68,9 @@ void setup()
   bt.begin(9600);
   // Ethernet.begin(mac, ip);
   String trameDate;
-  String cs = String(calculerChecksum("<SC>26040528092100"),HEX);
+  String cs = String(calculerChecksum("<SC>26040528103500"),HEX);
   cs.toUpperCase();
-  trameDate = "<ID00><SC>26040528092100 "+cs+"<E>";
+  trameDate = "<ID00><SC>26040528103500"+cs+"<E>";
   pinMode(PIN_BOUTON, INPUT_PULLUP);
   Serial.println(trameDate);
   Panneau.println(trameDate);
