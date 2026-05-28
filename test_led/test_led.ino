@@ -1,7 +1,8 @@
+
+
 #include <SPI.h>
 #include <Ethernet.h>
-//#include <SoftwareSerial.h>
-//SoftwareSerial bt(2,3);
+
 const int serverPort = 4080;
 
 byte mac[]= {0x90, 0xA2, 0xDA, 0x0E, 0xD1, 0xD4 };
@@ -20,7 +21,6 @@ void setup() {
   Serial.print("Arduino loge avec led: ");
   Serial.println(Ethernet.localIP());
   server.begin();
-  
 }
 
 void loop() {
@@ -49,10 +49,5 @@ void loop() {
       
   }
   command=2;
-  //digitalWrite(ledPinSortie, HIGH);
-//  if (bt.available()) {
-//    Serial.write(bt.read());
-//  }
 
-  
 }

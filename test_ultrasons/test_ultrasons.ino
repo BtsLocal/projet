@@ -1,15 +1,17 @@
 #include <SPI.h>
 #include <Ethernet.h>
 #include <SoftwareSerial.h>
-#define SEUIL 80
+#define SEUIL 65
 SoftwareSerial BTSerial(2,3);
 
 byte mac[]= {0x90, 0xA2, 0xDA, 0x0F, 0x1D, 0x88 };
 IPAddress server(192, 168, 2, 72);
 IPAddress ip(192, 168, 2, 73);
 IPAddress serverAsterisk(192, 168, 2, 76);
+IPAddress serverBDD(192, 168, 2, 68);
 EthernetClient client;
 EthernetClient clientAsterisk;
+EthernetClient clientBDD;
 
 
 enum Etat {
@@ -28,7 +30,7 @@ const int echoPin = 6;
 const int trigPin2 = 9;
 const int echoPin2 = 8;
 
-
+float temperature;
 int distance;
 int distance2;
 
@@ -36,7 +38,7 @@ int compteur=0;
 long tempsPrecedent = 0;
 long tempsActuel = 0;
 unsigned long lastDetectionTime = 0;
-
+unsigned long lastDetectionTime2 = 0;
 void loginToAsterisk(){
   clientAsterisk.print("Action: login\r\n"); 
   clientAsterisk.print("Username: asterisk_user\r\n");
@@ -73,7 +75,12 @@ void setup() {
   }
   else
     Serial.println("Failed to connect to Asterisk server");
-
+    
+  if (clientBDD.connect(serverBDD, 80)){
+    Serial.println("Connected to Web server");
+  }
+  else
+    Serial.println("Failed to connect to Web server"); 
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -93,8 +100,7 @@ int readDistance(int trig, int echo){
 void loop() {
 
   if (!client.connected()) {
-    Serial.println("Connection is disconnected");
-    client.stop();
+    Serial.println("Server is disconnected");  
 
     if (client.connect(server, serverPort))
       Serial.println("Reconnected to server");
@@ -102,11 +108,22 @@ void loop() {
       Serial.println("Failed to reconnect to server");
   }
 
+  if (!clientBDD.connected()) {
+    Serial.println("Web Server is disconnected");  
+
+    if (clientBDD.connect(serverBDD, 80))
+      Serial.println("Reconnected to Web server");
+    else
+      Serial.println("Failed to reconnect to Web server");
+  }
+
   if (!clientAsterisk.connected()) {
     Serial.println("Disconnected to Asterisk Server");
     clientAsterisk.stop();
 
-    if (clientAsterisk.connect(serverAsterisk, 5038)){
+    if (clientAsterisk.connect(serverAsterisk, 5038)){ 
+
+      
       Serial.println("Reconnected to Asterisk server");
       loginToAsterisk();
     }
@@ -139,7 +156,7 @@ void loop() {
       }
       else if (s2 && !s1){
         etat = S2_TRIGGERED;
-        lastDetectionTime = now;
+        lastDetectionTime2 = now;
         Serial.println("-> S2_TRIGGERED");
       }
       break;
@@ -160,15 +177,19 @@ void loop() {
         clientAsterisk.print("Priority: 1\r\n");
         clientAsterisk.print("Data:Dial(SIP/1001,3)\r\n");
         clientAsterisk.print("Async: yes\r\n\r\n");
+        clientBDD.print("GET http://192.168.2.68/enregistrementTemp.php?temp=+");
+        clientBDD.print(temperature);
+        clientBDD.print("&compteur=+");
+        clientBDD.print(compteur);
+        clientBDD.println(" HTTP/1.0");
+        clientBDD.println();
         etat = IDLE;
       }else if (!s1) {
-        if (now - lastDetectionTime > 1000) {  
+        if (now - lastDetectionTime > 1500) {  
           etat = IDLE;
           Serial.println("Timeout S1 -> IDLE");
         }
       }
-      
-      
       break;
 
     case S2_TRIGGERED:
@@ -180,12 +201,11 @@ void loop() {
         client.write('0');
         client.flush();
         etat = IDLE;
-        lastDetectionTime = now;
       }
-      else if (!s1) {
-        if (now - lastDetectionTime > 1000) {  
+      else if (!s2) {
+        if (now - lastDetectionTime2 > 1500) {
           etat = IDLE;
-          Serial.println("Timeout S1 -> IDLE");
+          Serial.println("Timeout S2 -> IDLE");
         }
       }
       break;
@@ -195,15 +215,25 @@ void loop() {
 //        etat = IDLE;
 //      }
 //      break;
+
+  tempsActuel=millis();
+  if((tempsActuel-tempsPrecedent) >= 1800000){
+    clientBDD.print("GET http://192.168.2.68/enregistrementTemp.php?temp=+");
+    clientBDD.print(temperature);
+    clientBDD.print("&compteur=+");
+    clientBDD.print(compteur);
+    clientBDD.println(" HTTP/1.0");
+    clientBDD.println();
+    tempsPrecedent=millis();
   }
 
-//  tempsActuel=millis();
-//  if((tempsActuel-tempsPrecedent) >= 1000){
-//    //Serial.println("ok");
-//    BTSerial.println("HELLO");
-//    tempsPrecedent=millis();
-//  }
 
-  BTSerial.print(compteur);
-  //if (BTSerial.available()){Serial.println(BTSerial.read());}
+
+  }
+
+
+  
+  BTSerial.println(compteur);
+  temperature= BTSerial.parseFloat();
+  if (BTSerial.available()){Serial.print(temperature);} 
 }
