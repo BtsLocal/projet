@@ -9,10 +9,12 @@ IPAddress server(192, 168, 2, 72);
 IPAddress ip(192, 168, 2, 73);
 IPAddress serverAsterisk(192, 168, 2, 76);
 IPAddress serverBDD(192, 168, 2, 68);
+IPAddress serverServo(192, 168, 2, 10);
 EthernetClient client;
 EthernetClient clientAsterisk;
 EthernetClient clientBDD;
-
+EthernetClient clientServo;
+const int bouton=5;
 
 enum Etat {
   IDLE, 
@@ -56,7 +58,7 @@ void setup() {
   pinMode(echoPin, INPUT);
   pinMode(trigPin2, OUTPUT);
   pinMode(echoPin2, INPUT);
-
+  pinMode(bouton, INPUT_PULLUP);
   Serial.begin(9600);
   BTSerial.begin(9600);
   Ethernet.begin(mac, ip);
@@ -68,6 +70,11 @@ void setup() {
     Serial.println("Connected to TCP server");
   else
     Serial.println("Failed to connect to TCP server");
+    
+  if (clientServo.connect(serverServo, serverPort))
+    Serial.println("Connected to Servo TCP server");
+  else
+    Serial.println("Failed to connect to Servo TCP server");
 
   if (clientAsterisk.connect(serverAsterisk, 5038)){
     Serial.println("Connected to Asterisk server");
@@ -107,7 +114,16 @@ void loop() {
     else
       Serial.println("Failed to reconnect to server");
   }
+  
+  if (!clientServo.connected()) {
+    Serial.println("Server Servo is disconnected");  
 
+    if (clientServo.connect(serverServo, serverPort))
+      Serial.println("Reconnected to server Servo ");
+    else
+      Serial.println("Failed to reconnect to server Servo");
+  }
+  
   if (!clientBDD.connected()) {
     Serial.println("Web Server is disconnected");  
 
@@ -143,7 +159,10 @@ void loop() {
   bool s2 = (distance2 < SEUIL);
 
   unsigned long now = millis();
-
+  if (digitalRead(bouton) == HIGH) {
+    client.write('3');
+    client.flush();
+  }
   switch(etat) {
 
     case IDLE:
@@ -169,14 +188,17 @@ void loop() {
         Serial.println(compteur);
         client.write('1');
         client.flush();
-        clientAsterisk.print("Action: originate\r\n");
-        clientAsterisk.print("Channel: SIP/1001\r\n");
-        clientAsterisk.print("Context: perso\r\n");
-        clientAsterisk.print("Exten: 1001\r\n");
-        clientAsterisk.print("CallerId: entrée local\r\n");
-        clientAsterisk.print("Priority: 1\r\n");
-        clientAsterisk.print("Data:Dial(SIP/1001,3)\r\n");
-        clientAsterisk.print("Async: yes\r\n\r\n");
+        if (clientServo.read()=="closed"){
+          clientAsterisk.print("Action: originate\r\n");
+          clientAsterisk.print("Channel: SIP/1001\r\n");
+          clientAsterisk.print("Context: perso\r\n");
+          clientAsterisk.print("Exten: 1001\r\n");
+          clientAsterisk.print("CallerId: entrée local\r\n");
+          clientAsterisk.print("Priority: 1\r\n");
+          clientAsterisk.print("Data:Dial(SIP/1001,3)\r\n");
+          clientAsterisk.print("Async: yes\r\n\r\n");
+        }
+        
         clientBDD.print("GET http://192.168.2.68/enregistrementTemp.php?temp=+");
         clientBDD.print(temperature);
         clientBDD.print("&compteur=+");
