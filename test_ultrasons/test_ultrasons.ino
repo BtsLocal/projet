@@ -1,7 +1,7 @@
 #include <SPI.h>
 #include <Ethernet.h>
 #include <SoftwareSerial.h>
-#define SEUIL 65
+#define SEUIL 80
 SoftwareSerial BTSerial(2,3);
 
 byte mac[]= {0x90, 0xA2, 0xDA, 0x0F, 0x1D, 0x88 };
@@ -14,18 +14,17 @@ EthernetClient client;
 EthernetClient clientAsterisk;
 EthernetClient clientBDD;
 EthernetClient clientServo;
-const int bouton=5;
 
 enum Etat {
   IDLE, 
   S1_TRIGGERED,
   S2_TRIGGERED,
-  CONFIRMING
+  //CONFIRMING
 };
 
 Etat etat = IDLE;
 
-const int serverPort = 4080;
+char etatServo='c';
 
 const int trigPin = 7;
 const int echoPin = 6;
@@ -41,6 +40,9 @@ long tempsPrecedent = 0;
 long tempsActuel = 0;
 unsigned long lastDetectionTime = 0;
 unsigned long lastDetectionTime2 = 0;
+
+
+
 void loginToAsterisk(){
   clientAsterisk.print("Action: login\r\n"); 
   clientAsterisk.print("Username: asterisk_user\r\n");
@@ -58,36 +60,36 @@ void setup() {
   pinMode(echoPin, INPUT);
   pinMode(trigPin2, OUTPUT);
   pinMode(echoPin2, INPUT);
-  pinMode(bouton, INPUT_PULLUP);
+  pinMode(5, INPUT_PULLUP);
   Serial.begin(9600);
   BTSerial.begin(9600);
   Ethernet.begin(mac, ip);
 
-  Serial.print("Arduino local avec capteur: ");
+  Serial.print(F("Arduino local avec capteur: "));
   Serial.println(Ethernet.localIP());
 
-  if (client.connect(server, serverPort))
-    Serial.println("Connected to TCP server");
+  if (client.connect(server, 4080))
+    Serial.println(F("Connected to TCP server"));
   else
-    Serial.println("Failed to connect to TCP server");
+    Serial.println(F("Failed to connect to TCP server"));
     
-  if (clientServo.connect(serverServo, serverPort))
-    Serial.println("Connected to Servo TCP server");
+  if (clientServo.connect(serverServo, 4081))
+    Serial.println(F("Connected to Servo TCP server"));
   else
-    Serial.println("Failed to connect to Servo TCP server");
+    Serial.println(F("Failed to connect to Servo TCP server"));
 
   if (clientAsterisk.connect(serverAsterisk, 5038)){
-    Serial.println("Connected to Asterisk server");
+    Serial.println(F("Connected to Asterisk server"));
     loginToAsterisk();
   }
   else
-    Serial.println("Failed to connect to Asterisk server");
+    Serial.println(F("Failed to connect to Asterisk server"));
     
   if (clientBDD.connect(serverBDD, 80)){
-    Serial.println("Connected to Web server");
+    Serial.println(F("Connected to Web server"));
   }
   else
-    Serial.println("Failed to connect to Web server"); 
+    Serial.println(F("Failed to connect to Web server")); 
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -109,7 +111,7 @@ void loop() {
   if (!client.connected()) {
     Serial.println("Server is disconnected");  
 
-    if (client.connect(server, serverPort))
+    if (client.connect(server, 4080))
       Serial.println("Reconnected to server");
     else
       Serial.println("Failed to reconnect to server");
@@ -118,7 +120,7 @@ void loop() {
   if (!clientServo.connected()) {
     Serial.println("Server Servo is disconnected");  
 
-    if (clientServo.connect(serverServo, serverPort))
+    if (clientServo.connect(serverServo, 4081))
       Serial.println("Reconnected to server Servo ");
     else
       Serial.println("Failed to reconnect to server Servo");
@@ -159,14 +161,14 @@ void loop() {
   bool s2 = (distance2 < SEUIL);
 
   unsigned long now = millis();
-  if (digitalRead(bouton) == HIGH) {
+  if (digitalRead(5) == HIGH) {
     client.write('3');
     client.flush();
   }
   switch(etat) {
 
     case IDLE:
-    Serial.println("IDLE");
+      Serial.println("IDLE");
 
       if (s1 && !s2){
         etat = S1_TRIGGERED;
@@ -188,7 +190,10 @@ void loop() {
         Serial.println(compteur);
         client.write('1');
         client.flush();
-        if (clientServo.read()=="closed"){
+        
+        etatServo=clientServo.read();
+        Serial.println(etatServo);
+        if (etatServo=='0'){
           clientAsterisk.print("Action: originate\r\n");
           clientAsterisk.print("Channel: SIP/1001\r\n");
           clientAsterisk.print("Context: perso\r\n");
