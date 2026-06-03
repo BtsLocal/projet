@@ -1,6 +1,6 @@
 
 <?php
-    $code=isset($_GET['code']) ? $_GET['code'] : null;
+    $code=isset($_POST['code']) ? $_POST['code'] : null;
     
     if($code===null){
     	echo "ERREUR: aucun code fourni";

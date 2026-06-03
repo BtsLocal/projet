@@ -2,7 +2,7 @@
 
     $temp = $_GET['temp'];
 
-
+    $compteur = $_GET['compteur'];
     $date = date('Y-m-d');
     $heure = date('H:i:s');
 
@@ -14,7 +14,7 @@
     {
 
     
-       $sql = "INSERT INTO mesures_temperature (temperature, date_mesure, capteur) VALUES ('$temp', NOW(), 'arduino')";
+       $sql = "INSERT INTO donnees_local (temperature, compteur_personne, horaire, date) VALUES ('$temp', '$compteur', '$heure', '$date')";
        $bdd->exec($sql);
        echo "Enregistrement fait";
     }   
