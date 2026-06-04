@@ -165,6 +165,30 @@ void loop() {
   bool s1 = (distance < SEUIL);
   bool s2 = (distance2 < SEUIL);
   unsigned long now = millis();
+
+  static unsigned long lastButtonPress = 0;
+  static bool lastButtonState = HIGH;
+  bool currentButtonState = digitalRead(5);
+  
+
+  if (lastButtonState == HIGH && currentButtonState == LOW) {
+    if (millis() - lastButtonPress > 500) {
+      
+      EthernetClient buttonClient;
+      if (buttonClient.connect(serverLoge, 4080)) {
+        buttonClient.write('3');
+        buttonClient.flush();
+        Serial.println("Sent '3' to loge");
+        buttonClient.stop();
+      } else {
+        Serial.println("Failed to connect to loge for button notification");
+      }
+      
+      lastButtonPress = millis();
+    }
+  }
+  lastButtonState = currentButtonState;
+
   
   switch(etat) {
     case IDLE:
@@ -231,7 +255,7 @@ void loop() {
       break;
   }
   
-  if (millis() - lastTempSend >= 1800000) {
+  if (millis() - lastTempSend >= 300000) {
     EthernetClient bddClient;
     if (bddClient.connect(IPAddress(192, 168, 2, 68), 80)) {
       bddClient.print("GET http://192.168.2.68/enregistrementTemp.php?temp=");
@@ -242,8 +266,12 @@ void loop() {
       bddClient.println();
       bddClient.println();
       bddClient.stop();
-    }
-    lastTempSend = millis();
+      Serial.println("temp sent");
+      lastTempSend = millis();
+    }else{
+      Serial.println("erreur connect bdd");
+      }
+    
   }
   
   if (BTSerial.available()) {
