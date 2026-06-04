@@ -14,6 +14,8 @@ byte mac[] = { 0x90, 0xA2, 0xDA, 0x0F, 0x1D, 0x77 };
 
 IPAddress ip(192, 168, 2, 10);
 EthernetServer server(4080);
+EthernetServer serverAlerte(4081);
+////////////////////////////////////////////////////////////////////////////////////
 
 void setup()
 {
@@ -25,6 +27,8 @@ void setup()
   Serial.print("Servo Arduino IP: ");
   Serial.println(Ethernet.localIP());
   server.begin();
+  serverAlerte.begin();
+
 
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -32,7 +36,7 @@ void setup()
 
 void loop()                  
 {
-  EthernetClient client = server.available();
+  EthernetClient client = server.available();  
   if(client){
     command=client.read();
     Serial.println(command);
@@ -41,15 +45,25 @@ void loop()
       tempsPrecedent=millis();
     }
     command=2;
-    if (myservo.read()!=0)
-      client.print("1");
-    else
-      client.print("0");
+  client.stop();
   }
-  
+  //Serial.println(myservo.read());
+  EthernetClient clientAlerte = serverAlerte.available();
+  if(clientAlerte){
+    Serial.println("connected to alertclient");
+    if (myservo.read()==0){
+        clientAlerte.print('1');
+        clientAlerte.flush();
+    } 
+     else{
+        clientAlerte.print('0');
+        clientAlerte.flush();
+    clientAlerte.stop();
+     }
+  }
 
  if(millis() - tempsPrecedent>=20000){
-  myservo.write(1);
+  myservo.write(0);
   tempsPrecedent=millis();
   }
 }

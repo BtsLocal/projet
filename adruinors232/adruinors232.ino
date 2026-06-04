@@ -45,21 +45,7 @@ unsigned char calculerChecksum(String trame)
   
   return checksum;
 }
-//////////////////////////////////////////////////////////////////////////////////////////////
-//void envoyerTemperature(float temperature) {
-//  if(client.connect(server, 80)) {
-//      client.print("GET http://192.168.2.68/enregistrementTemp.php?temp=+");
-//      client.print(temperature);
-//      client.println(" HTTP/1.0");
-//      client.println();
-//      Serial.println("ENVOI TEMP OK"); 
-//      client.stop();
-//  }
-//  else{
-//    Serial.println("erreur connect");
-//    }
-//}
-///////////////////////////////////////////////////////////////////////////////////////////////
+
 void setup()
 {
   
@@ -68,9 +54,9 @@ void setup()
   bt.begin(9600);
   // Ethernet.begin(mac, ip);
   String trameDate;
-  String cs = String(calculerChecksum("<SC>26040528103500"),HEX);
+  String cs = String(calculerChecksum("<SC>26040604131100"),HEX);
   cs.toUpperCase();
-  trameDate = "<ID00><SC>26040528103500"+cs+"<E>";
+  trameDate = "<ID00><SC>26040604131100"+cs+"<E>";
   pinMode(PIN_BOUTON, INPUT_PULLUP);
   Serial.println(trameDate);
   Panneau.println(trameDate);
@@ -90,8 +76,10 @@ void loop()
   
  if (bt.available()) { 
     c=bt.parseInt();
-    bt.println(temperature);
  }
+
+ bt.println(temperature);
+   bt.flush();
 
 
   String trame;
@@ -103,16 +91,7 @@ void loop()
   cs.toUpperCase();
   trame = "<ID00>" + protocole + message + cs + "<E>";
   
-//  int etat = digitalRead(PIN_BOUTON);
-//
-//  if (etat == LOW) {           // LOW = pressé avec INPUT_PULLUP
-//    tone(PIN_BUZZER, 3500);
-//  } else {
-//    noTone(PIN_BUZZER);
-//  }
-
-  
-     
+ 
  
  if(millis() - tempsPrecedent>=10000){
   Panneau.println(trame);
