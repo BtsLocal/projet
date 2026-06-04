@@ -2,8 +2,8 @@
 #include <Keypad.h>
 #include <SPI.h>
 
-const int ROW_NUM = 4; //four rows
-const int COLUMN_NUM = 4; //four columns
+const int ROW_NUM = 4;
+const int COLUMN_NUM = 4;
 char keys[ROW_NUM][COLUMN_NUM] = {
 {'1','2','3', 'A'},
 {'4','5','6', 'B'},
@@ -12,8 +12,8 @@ char keys[ROW_NUM][COLUMN_NUM] = {
 };
 String MDP="";
 int numero=0;
-byte pin_rows[ROW_NUM] = {9, 8, 7, 6}; //connect to the row pinouts of the keypad
-byte pin_column[COLUMN_NUM] = {5, 4, 3, 2}; //connect to the column pinouts of the keypad
+byte pin_rows[ROW_NUM] = {9, 8, 7, 6};
+byte pin_column[COLUMN_NUM] = {5, 4, 3, 2};
 Keypad keypad = Keypad( makeKeymap(keys), pin_rows, pin_column, ROW_NUM, COLUMN_NUM );
 byte mac[] = { 0x90, 0xA2, 0xDA, 0x0F, 0x1D, 0x98 };
 IPAddress serverServo(192, 168, 2, 10);
