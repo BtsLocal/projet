@@ -34,6 +34,7 @@ unsigned long lastDetectionTime = 0;
 unsigned long lastDetectionTime2 = 0;
 unsigned long lastAsteriskKeepAlive = 0;
 unsigned long lastTempSend = 0;
+unsigned long lastButtonPress = 0;
 
 bool asteriskLoggedIn = false;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -158,20 +159,11 @@ void loop() {
     }
     lastAsteriskKeepAlive = millis();
   }
-  
-  distance = readDistance(trigPin, echoPin);
-  distance2 = readDistance(trigPin2, echoPin2);
-  
-  bool s1 = (distance < SEUIL);
-  bool s2 = (distance2 < SEUIL);
-  unsigned long now = millis();
 
-  static unsigned long lastButtonPress = 0;
-  static bool lastButtonState = HIGH;
-  bool currentButtonState = digitalRead(5);
   
-
-  if (lastButtonState == HIGH && currentButtonState == LOW) {
+  
+  
+  if (digitalRead(5)==HIGH) {
     if (millis() - lastButtonPress > 500) {
       
       EthernetClient buttonClient;
@@ -187,7 +179,18 @@ void loop() {
       lastButtonPress = millis();
     }
   }
-  lastButtonState = currentButtonState;
+
+  
+  distance = readDistance(trigPin, echoPin);
+  distance2 = readDistance(trigPin2, echoPin2);
+  
+  bool s1 = (distance < SEUIL);
+  bool s2 = (distance2 < SEUIL);
+  unsigned long now = millis();
+
+  
+
+
 
   
   switch(etat) {
