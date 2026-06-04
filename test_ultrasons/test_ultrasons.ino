@@ -146,19 +146,7 @@ int readDistance(int trig, int echo) {
 }
 /////////////////////////////////////////////////////////////////////////////////
 void loop() {
-  if (millis() - lastAsteriskKeepAlive > 30000) {
-    if (client.connected() && asteriskLoggedIn) {
-      client.print("Action: ping\r\n\r\n");
-      client.flush();
-    } else {
-      asteriskLoggedIn = false;
-      client.stop();
-      if (client.connect(serverAsterisk, 5038)) {
-        loginToAsterisk();
-      }
-    }
-    lastAsteriskKeepAlive = millis();
-  }
+// 
 
   
   
